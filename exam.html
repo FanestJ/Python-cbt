@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python CBT Quiz</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --primary: #1f6feb;
+            --primary-dark: #154ea8;
+            --text: #1f2937;
+            --muted: #64748b;
+            --correct: #1f9d55;
+            --wrong: #d92d20;
+            --border: #dfe7f5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #edf4ff, #eef8ff);
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 26px;
+            box-shadow: 0 8px 24px rgba(31, 111, 235, 0.08);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            color: var(--primary-dark);
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.98rem;
+        }
+
+        #quizForm {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 18px 20px 10px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .question-block {
+            padding: 18px 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .question-block:last-child {
+            border-bottom: none;
+        }
+
+        .question-number {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .question-text {
+            margin: 0 0 12px;
+            font-size: 1.02rem;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+            margin-left: 6px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f8fbff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: 0.2s ease;
+        }
+
+        .option:hover {
+            border-color: #b7cdfd;
+            background: #eef5ff;
+        }
+
+        .option input {
+            accent-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .option label {
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .timer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            background: #f8fbff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .timer {
+            color: var(--wrong);
+            font-size: 1.15rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            padding: 22px 0 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 22px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        #submitBtn {
+            background: var(--primary);
+            color: white;
+        }
+
+        #resetBtn {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        #resultBox {
+            margin-top: 14px;
+            padding: 18px 20px;
+            border-radius: 12px;
+            display: none;
+            font-size: 1.03rem;
+            line-height: 1.5;
+            border: 1px solid transparent;
+        }
+
+        .result-success {
+            background: #eafaf1;
+            border-color: #bbebcd;
+            color: #12623a;
+        }
+
+        .result-warning {
+            background: #fff1f0;
+            border-color: #fecfc9;
+            color: #9c2f2a;
+        }
+
+        .correct-answer {
+            color: var(--correct);
+            font-weight: 700;
+        }
+
+        .wrong-answer {
+            color: var(--wrong);
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header,
+            #quizForm {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Python CBT Quiz</h1>
+            <p class="subtitle">80 multiple-choice questions • A–D options • 30-minute timed exam</p>
+        </div>
+
+        <div class="timer-bar">
+            <span>Time Remaining</span>
+            <span id="timer" class="timer">30:00</span>
+        </div>
+
+        <form id="quizForm"></form>
+
+        <div class="controls">
+            <button type="button" id="submitBtn">Submit Answers</button>
+            <button type="button" id="resetBtn">Reset</button>
+        </div>
+
+        <div id="resultBox"></div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "1. Where should Python be downloaded from?", options: ["github.com", "python.org", "microsoft.com", "google.com"], answer: 1 },
+            { q: "2. Which option is important to check when installing Python so VS Code can find it?", options: ["Install for all users", "Create desktop shortcut", "Add Python to PATH", "Enable dark mode"], answer: 2 },
+            { q: "3. Where can Visual Studio Code be downloaded from?", options: ["code.visualstudio.com", "python.org", "vscode.python.com", "microsoft.python.com"], answer: 0 },
+            { q: "4. Which shortcut opens the Extensions panel in VS Code?", options: ["Ctrl + P", "Ctrl + Shift + X", "Ctrl + Shift + P", "Ctrl + X"], answer: 1 },
+            { q: "5. Which Python extension should be installed in VS Code?", options: ["Google Python Extension", "Apple Python Extension", "Official Microsoft Python extension", "Linux Python Extension"], answer: 2 },
+            { q: "6. Which command is used to select a Python interpreter in VS Code?", options: ["Python: Start Interpreter", "Python: Select Interpreter", "Python: Choose Program", "Python: Install Interpreter"], answer: 1 },
+            { q: "7. Which keyboard shortcut opens the Command Palette?", options: ["Ctrl + Shift + P", "Ctrl + Shift + X", "Ctrl + Alt + P", "Ctrl + P"], answer: 0 },
+            { q: "8. What is the recommended file name for the first Python program in the note?", options: ["python.txt", "program.python", "main.py", "first.exe"], answer: 2 },
+            { q: "9. Which symbol represents the Run button in VS Code?", options: ["■", "▶", "★", "+"], answer: 1 },
+            { q: "10. Where does the output of a Python program normally appear in VS Code?", options: ["Extensions panel", "Command Palette", "Terminal panel", "File Explorer"], answer: 2 },
+            { q: "11. Who created Python?", options: ["Bill Gates", "James Gosling", "Guido van Rossum", "Mark Zuckerberg"], answer: 2 },
+            { q: "12. In which year was Python released?", options: ["1989", "1991", "1995", "2000"], answer: 1 },
+            { q: "13. Which of the following is a use of Python?", options: ["Web development", "Software development", "Mathematics", "All of the above"], answer: 3 },
+            { q: "14. Python is designed to have syntax that is similar to which language?", options: ["English", "French", "Spanish", "Latin"], answer: 0 },
+            { q: "15. What does Python use to define the scope of blocks of code?", options: ["Curly brackets", "Semicolons", "Indentation", "Square brackets"], answer: 2 },
+            { q: "16. What happens if required indentation is missing in Python?", options: ["The program runs normally", "Python gives an error", "Python automatically adds it", "The computer shuts down"], answer: 1 },
+            { q: "17. What does indentation refer to?", options: ["Spaces at the beginning of a code line", "Spaces at the end of a program", "Number of variables", "Number of functions"], answer: 0 },
+            { q: "18. What is used to create a comment in Python?", options: ["//", "", "#", "**"], answer: 2 },
+            { q: "19. What does Python do with a comment?", options: ["Executes it", "Ignores it", "Prints it automatically", "Converts it to a variable"], answer: 1 },
+            { q: "20. Which statement correctly prints “Hello, World!”?", options: ["echo(“Hello, World!”)", "print(“Hello, World!”)", "display(“Hello, World!”)", "output(“Hello, World!”)"], answer: 1 },
+            { q: "21. How is a variable created in Python?", options: ["By using the var command", "By declaring its type first", "By assigning a value to it", "By using the variable command"], answer: 2 },
+            { q: "22. Which statement correctly creates a variable?", options: ["variable x = 5", "x = 5", "int x = 5", "create x = 5"], answer: 1 },
+            { q: "23. Does Python require a special command for declaring variables?", options: ["Yes, declare", "Yes, variable", "No", "Yes, var"], answer: 2 },
+            { q: "24. Which function can be used to determine the data type of a variable?", options: ["data()", "datatype()", "type()", "typeof()"], answer: 2 },
+            { q: "25. What does x = str(3) produce?", options: ["Integer 3", "Float 3.0", "String “3”", "Boolean True"], answer: 2 },
+            { q: "26. Which of the following is a legal Python variable name?", options: ["2myvar", "my-var", "my var", "my_var"], answer: 3 },
+            { q: "27. Which character can a Python variable name start with besides a letter?", options: ["#", "_", "-", "@"], answer: 1 },
+            { q: "28. Which of these variable names is illegal?", options: ["myvar", "my_var", "myVar2", "2myvar"], answer: 3 },
+            { q: "29. Python variable names are:", options: ["Not case-sensitive", "Case-sensitive", "Always uppercase", "Always lowercase"], answer: 1 },
+            { q: "30. Which naming style uses underscores between words?", options: ["Camel Case", "Pascal Case", "Snake Case", "Upper Case"], answer: 2 },
+            { q: "31. Which statement assigns three different values to three variables?", options: ["x = y = z = “Orange”", "x, y, z = “Orange”, “Banana”, “Cherry”", "x + y + z = values", "x:y:z = values"], answer: 1 },
+            { q: "32. What does x = y = z = \"Orange\" do?", options: ["Assigns different values to x, y and z", "Assigns “Orange” to x only", "Assigns “Orange” to all three variables", "Produces an error"], answer: 2 },
+            { q: "33. What is unpacking in Python?", options: ["Deleting variables", "Extracting values from a collection into variables", "Removing comments", "Sorting values"], answer: 1 },
+            { q: "34. Which operator is commonly used to concatenate strings?", options: ["*", "/", "+", "%"], answer: 2 },
+            { q: "35. What happens when you try to add a string and a number using +?", options: ["They are automatically converted", "Python gives an error", "The number disappears", "The string disappears"], answer: 1 },
+            { q: "36. Which keyword is used to define a function?", options: ["function", "define", "def", "fun"], answer: 2 },
+            { q: "37. How do you call a function named my_function?", options: ["call my_function", "my_function()", "function.my_function()", "run my_function"], answer: 1 },
+            { q: "38. Information passed into a function is called:", options: ["Variables", "Arguments", "Comments", "Operators"], answer: 1 },
+            { q: "39. Which symbol is used before a parameter to accept an arbitrary number of positional arguments?", options: ["#", "&", "*", "@"], answer: 2 },
+            { q: "40. What does *args receive?", options: ["A dictionary", "A tuple of arguments", "A single string only", "A Boolean"], answer: 1 },
+            { q: "41. Which syntax is used for keyword arguments?", options: ["key = value", "key : value only", "key -> value", "key + value"], answer: 0 },
+            { q: "42. Which symbol is used for arbitrary keyword arguments?", options: ["*", "**", "##", "&&"], answer: 1 },
+            { q: "43. What data structure does **kwargs receive?", options: ["List", "Tuple", "Dictionary", "Set"], answer: 2 },
+            { q: "44. What is a default parameter value?", options: ["A value used when no argument is provided", "A value that cannot be changed", "A value that must always be provided", "A value stored in a list"], answer: 0 },
+            { q: "45. Which keyword allows a function to send a value back to the caller?", options: ["send", "output", "return", "give"], answer: 2 },
+            { q: "46. Which of the following is a built-in Python data type?", options: ["str", "int", "list", "All of the above"], answer: 3 },
+            { q: "47. Which data type represents text?", options: ["int", "str", "float", "bool"], answer: 1 },
+            { q: "48. Which data type represents whole numbers?", options: ["float", "int", "str", "complex"], answer: 1 },
+            { q: "49. Which data type represents decimal numbers?", options: ["int", "bool", "float", "str"], answer: 2 },
+            { q: "50. What symbol is used for the imaginary part of a complex number in Python?", options: ["i", "j", "c", "z"], answer: 1 },
+            { q: "51. Which of the following is a complex number?", options: ["5.5", "10", "3+5j", "“3+5j”"], answer: 2 },
+            { q: "52. Which function converts a value to an integer?", options: ["number()", "integer()", "int()", "convert()"], answer: 2 },
+            { q: "53. What is the result of int(2.8)?", options: ["2.8", "3", "2", "0"], answer: 2 },
+            { q: "54. What is the result of float(3)?", options: ["3", "“3”", "3.0", "True"], answer: 2 },
+            { q: "55. Which module can be used to generate random numbers?", options: ["numbers", "random", "mathrandom", "rand"], answer: 1 },
+            { q: "56. Which quotation marks can be used to create a Python string?", options: ["Single quotes only", "Double quotes only", "Both single and double quotes", "Square brackets only"], answer: 2 },
+            { q: "57. Which function returns the length of a string?", options: ["size()", "length()", "len()", "countall()"], answer: 2 },
+            { q: "58. What is the index of the first character in a Python string?", options: ["0", "1", "-1", "2"], answer: 0 },
+            { q: "59. Which keyword checks whether a value exists in a string?", options: ["has", "contains", "in", "exists"], answer: 2 },
+            { q: "60. Which keyword checks whether a value is NOT present in a string?", options: ["not in", "not exists", "absent", "without"], answer: 0 },
+            { q: "61. Which method converts a string to uppercase?", options: ["upper()", "uppercase()", "capital()", "up()"], answer: 0 },
+            { q: "62. Which method converts a string to lowercase?", options: ["lower()", "lowercase()", "small()", "down()"], answer: 0 },
+            { q: "63. Which method removes whitespace from the beginning and end of a string?", options: ["remove()", "strip()", "delete()", "trimtext()"], answer: 1 },
+            { q: "64. Which method replaces part of a string with another value?", options: ["replace()", "change()", "switch()", "modify()"], answer: 0 },
+            { q: "65. Which method splits a string into a list?", options: ["divide()", "split()", "separate()", "list()"], answer: 1 },
+            { q: "66. In b[2:5], which index is NOT included?", options: ["2", "3", "4", "5"], answer: 3 },
+            { q: "67. What does b[:5] mean?", options: ["Start at index 5 and go to the end", "Start at the beginning and stop before index 5", "Return only index 5", "Reverse the string"], answer: 1 },
+            { q: "68. What does b[2:] mean?", options: ["Start at index 2 and continue to the end", "Start at the beginning and stop at index 2", "Return only index 2", "Delete index 2"], answer: 0 },
+            { q: "69. What does negative indexing allow you to do?", options: ["Start from the end of a string", "Delete a string", "Reverse every character automatically", "Convert a string to an integer"], answer: 0 },
+            { q: "70. Which method can be used to insert values into {} placeholders in a string?", options: ["insert()", "format()", "place()", "add()"], answer: 1 },
+            { q: "71. Which escape sequence represents a new line?", options: ["\t", "\b", "\n", "\r"], answer: 2 },
+            { q: "72. Which character begins an escape sequence in Python?", options: ["/", "#", "\\", "@"], answer: 2 },
+            { q: "73. Which two values represent Boolean values in Python?", options: ["Yes and No", "True and False", "1 and 2", "On and Off"], answer: 1 },
+            { q: "74. What does bool(0) return?", options: ["True", "False", "0", "None"], answer: 1 },
+            { q: "75. What does bool(\"Hello\") return?", options: ["False", "0", "True", "None"], answer: 2 },
+            { q: "76. Which operator is used for exponentiation?", options: ["^", "**", "//", "%%"], answer: 1 },
+            { q: "77. Which operator performs floor division?", options: ["/", "//", "%", "**"], answer: 1 },
+            { q: "78. Which logical operator returns True when both conditions are true?", options: ["or", "not", "and", "is"], answer: 2 },
+            { q: "79. Which brackets are used to create a Python list?", options: ["()", "{}", "[]", "<>"], answer: 2 },
+            { q: "80. Which statement correctly describes a tuple?", options: ["It is ordered and changeable", "It is unordered and allows no duplicates", "It is ordered and unchangeable", "It is always empty"], answer: 2 }
+        ];
+
+        const quizForm = document.getElementById('quizForm');
+        const resultBox = document.getElementById('resultBox');
+        const timerDisplay = document.getElementById('timer');
+        const durationMinutes = 30;
+        let timeLeft = durationMinutes * 60;
+        let timerInterval = null;
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = formatTime(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showResult('Time expired! Your exam has been submitted automatically.');
+                }
+            }, 1000);
+        }
+
+        function renderQuestions() {
+            questions.forEach((item, index) => {
+                const block = document.createElement('div');
+                block.className = 'question-block';
+
+                const number = document.createElement('div');
+                number.className = 'question-number';
+                number.textContent = `Question ${index + 1}`;
+
+                const question = document.createElement('p');
+                question.className = 'question-text';
+                question.textContent = item.q;
+
+                const optionsWrap = document.createElement('div');
+                optionsWrap.className = 'options';
+
+                item.options.forEach((optionText, optionIndex) => {
+                    const optionRow = document.createElement('div');
+                    optionRow.className = 'option';
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = `q${index}`;
+                    radio.value = String(optionIndex);
+                    radio.id = `q${index}_opt${optionIndex}`;
+
+                    const label = document.createElement('label');
+                    label.setAttribute('for', radio.id);
+                    label.textContent = `${String.fromCharCode(65 + optionIndex)}. ${optionText}`;
+
+                    optionRow.appendChild(radio);
+                    optionRow.appendChild(label);
+                    optionsWrap.appendChild(optionRow);
+                });
+
+                block.appendChild(number);
+                block.appendChild(question);
+                block.appendChild(optionsWrap);
+                quizForm.appendChild(block);
+            });
+        }
+
+        function computeScore() {
+            let score = 0;
+            questions.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selected && Number(selected.value) === item.answer) {
+                    score += 1;
+                }
+            });
+            return score;
+        }
+
+        function showResult(messageOverride = null) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+
+            const allInputs = document.querySelectorAll('input[type="radio"]');
+            allInputs.forEach(input => {
+                input.disabled = true;
+            });
+
+            clearInterval(timerInterval);
+
+            const score = computeScore();
+            const total = questions.length;
+            const percent = Math.round((score / total) * 100);
+
+            let message = messageOverride || `You scored ${score}/${total} (${percent}%).`;
+            let className = score >= 50 ? 'result-success' : 'result-warning';
+
+            if (!messageOverride) {
+                if (score >= 70) {
+                    message += ' Excellent! You did very well.';
+                } else if (score >= 50) {
+                    message += ' Good effort. You passed.';
+                } else {
+                    message += ' You need more practice. Review the answers and try again.';
+                }
+            }
+
+            resultBox.innerHTML = `<strong>${message}</strong><br><br>`;
+
+            questions.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                const chosen = selected ? Number(selected.value) : null;
+                const correctIndex = item.answer;
+                const correctLetter = String.fromCharCode(65 + correctIndex);
+
+                const status = chosen === correctIndex ? '✓ Correct' : `✗ Your answer: ${chosen === null ? 'No answer selected' : String.fromCharCode(65 + chosen)}. Correct answer: ${correctLetter}`;
+
+                const itemText = document.createElement('div');
+                itemText.style.marginBottom = '8px';
+                itemText.innerHTML = `<div><strong>Question ${index + 1}:</strong> ${item.q}</div><div class="${chosen === correctIndex ? 'correct-answer' : 'wrong-answer'}">${status}</div>`;
+                resultBox.appendChild(itemText);
+            });
+
+            resultBox.style.display = 'block';
+            resultBox.className = `result-box ${className}`;
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            if (timeLeft <= 0) return;
+            showResult();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timeLeft = durationMinutes * 60;
+            timerDisplay.textContent = formatTime(timeLeft);
+            quizForm.reset();
+            resultBox.style.display = 'none';
+            resultBox.className = 'result-box';
+            resultBox.innerHTML = '';
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').style.opacity = '1';
+            document.getElementById('submitBtn').style.cursor = 'pointer';
+            document.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.disabled = false;
+            });
+            startTimer();
+        });
+
+        renderQuestions();
+        startTimer();
+    </script>
+</body>
+
+</html>
